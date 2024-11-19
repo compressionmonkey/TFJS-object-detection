@@ -37,7 +37,7 @@ class App extends React.Component {
         .getUserMedia({
           audio: false,
           video: {
-            facingMode: "user"
+            facingMode: "environment"
           }
         })
         .then(stream => {
