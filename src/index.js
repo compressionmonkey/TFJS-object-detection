@@ -35,8 +35,25 @@ class App extends React.Component {
     averageDetectionTime: 0
   }
 
+  async logToVercel(data) {
+    try {
+      await fetch('/api/log-detection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (error) {
+      console.error('Failed to log to Vercel:', error);
+    }
+  }
+
   updateDetectionStats(processingTime) {
-    const times = [...this.state.detectionTimes, processingTime].slice(-30); // Keep last 30 measurements
+    const times = [...this.state.detectionTimes, processingTime].slice(-30);
     const average = times.reduce((a, b) => a + b, 0) / times.length;
     
     this.setState({
@@ -44,8 +61,11 @@ class App extends React.Component {
       averageDetectionTime: average
     });
     
-    if (times.length % 30 === 0) { // Log average every 30 frames
-      console.log(`Average detection time (last 30 frames): ${average.toFixed(2)} ms`);
+    if (times.length % 30 === 0) {
+      this.logToVercel({
+        detectionTime: average,
+        type: 'average_detection_time'
+      });
     }
   }
 
@@ -107,6 +127,8 @@ class App extends React.Component {
     var video_frame = document.getElementById('frame');
 
     let kangarooCount = 0;
+    let highestConfidence = 0;
+
     scores[0].forEach((score, i) => {
       if (score > threshold) {
         const bbox = [];
@@ -119,10 +141,9 @@ class App extends React.Component {
         bbox[2] = maxX - minX;
         bbox[3] = maxY - minY;
         
-        // Count kangaroos
         if (classesDir[classes[i]].name === 'Kangaroo') {
-            kangarooCount++;
-            console.log(`Kangaroo detected with confidence: ${(score * 100).toFixed(2)}%`);
+          kangarooCount++;
+          highestConfidence = Math.max(highestConfidence, score);
         }
         
         detectionObjects.push({
@@ -135,7 +156,11 @@ class App extends React.Component {
     })
     
     if (kangarooCount > 0) {
-        console.log(`Found ${kangarooCount} kangaroo(s) in frame`);
+      this.logToVercel({
+        kangarooCount,
+        confidence: highestConfidence * 100,
+        type: 'kangaroo_detection'
+      });
     }
     
     return detectionObjects
