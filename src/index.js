@@ -30,6 +30,24 @@ class App extends React.Component {
   videoRef = React.createRef();
   canvasRef = React.createRef();
 
+  state = {
+    detectionTimes: [],
+    averageDetectionTime: 0
+  }
+
+  updateDetectionStats(processingTime) {
+    const times = [...this.state.detectionTimes, processingTime].slice(-30); // Keep last 30 measurements
+    const average = times.reduce((a, b) => a + b, 0) / times.length;
+    
+    this.setState({
+      detectionTimes: times,
+      averageDetectionTime: average
+    });
+    
+    if (times.length % 30 === 0) { // Log average every 30 frames
+      console.log(`Average detection time (last 30 frames): ${average.toFixed(2)} ms`);
+    }
+  }
 
   componentDidMount() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -63,15 +81,20 @@ class App extends React.Component {
   }
 
     detectFrame = (video, model) => {
+        const startTime = performance.now();
         tf.engine().startScope();
         model.executeAsync(this.process_input(video)).then(predictions => {
-        this.renderPredictions(predictions, video);
-        requestAnimationFrame(() => {
-          this.detectFrame(video, model);
+            const endTime = performance.now();
+            const processingTime = endTime - startTime;
+            this.updateDetectionStats(processingTime);
+            
+            this.renderPredictions(predictions, video);
+            requestAnimationFrame(() => {
+                this.detectFrame(video, model);
+            });
+            tf.engine().endScope();
         });
-        tf.engine().endScope();
-      });
-  };
+    };
 
   process_input(video_frame){
     const tfimg = tf.browser.fromPixels(video_frame).toInt();
@@ -83,6 +106,7 @@ class App extends React.Component {
     const detectionObjects = []
     var video_frame = document.getElementById('frame');
 
+    let kangarooCount = 0;
     scores[0].forEach((score, i) => {
       if (score > threshold) {
         const bbox = [];
@@ -94,6 +118,13 @@ class App extends React.Component {
         bbox[1] = minY;
         bbox[2] = maxX - minX;
         bbox[3] = maxY - minY;
+        
+        // Count kangaroos
+        if (classesDir[classes[i]].name === 'Kangaroo') {
+            kangarooCount++;
+            console.log(`Kangaroo detected with confidence: ${(score * 100).toFixed(2)}%`);
+        }
+        
         detectionObjects.push({
           class: classes[i],
           label: classesDir[classes[i]].name,
@@ -102,6 +133,11 @@ class App extends React.Component {
         })
       }
     })
+    
+    if (kangarooCount > 0) {
+        console.log(`Found ${kangarooCount} kangaroo(s) in frame`);
+    }
+    
     return detectionObjects
   }
 
