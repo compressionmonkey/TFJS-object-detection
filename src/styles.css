@@ -18,7 +18,7 @@ h2 {
   top: 10px;
   left: 10px;
   z-index: 10;
-  background-color: rgba(255, 111, 0, 0.85);
+  background-color: rgba(0, 120, 255, 0.85);
   color: white;
   padding: 10px;
   border-radius: 5px;
@@ -39,8 +39,8 @@ h2 {
 }
 
 .highlighter {
-  background: rgba(0, 255, 0, 0.25);
-  border: 1px dashed #fff;
+  background: rgba(0, 120, 255, 0.25);
+  border: 2px solid rgba(0, 120, 255, 0.8);
   z-index: 1;
   position: absolute;
 }

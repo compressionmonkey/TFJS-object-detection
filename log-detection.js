@@ -7,14 +7,14 @@ export default async function handler(req, res) {
     const { 
       detectionTime, 
       confidence, 
-      kangarooCount, 
+      phoneCount, 
       type,
       timestamp 
     } = req.body;
 
     // Enhanced logging with different formats based on log type
-    if (type === 'kangaroo_detection') {
-      console.log(`[DETECTION] Kangaroos: ${kangarooCount}, Confidence: ${confidence.toFixed(2)}%, Time: ${timestamp}`);
+    if (type === 'phone_detection') {
+      console.log(`[DETECTION] Phones: ${phoneCount}, Confidence: ${confidence.toFixed(2)}%, Time: ${timestamp}`);
     } else if (type === 'average_detection_time') {
       console.log(`[PERFORMANCE] Average Detection Time: ${detectionTime.toFixed(2)}ms, Time: ${timestamp}`);
     }
