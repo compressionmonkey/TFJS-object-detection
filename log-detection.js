@@ -3,20 +3,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { 
-    detectionTime, 
-    confidence, 
-    kangarooCount, 
-    timestamp 
-  } = req.body;
+  try {
+    const { 
+      detectionTime, 
+      confidence, 
+      kangarooCount, 
+      type,
+      timestamp 
+    } = req.body;
 
-  // Log to Vercel's logging system
-  console.log({
-    timestamp,
-    detectionTime,
-    confidence,
-    kangarooCount
-  });
+    // Enhanced logging with different formats based on log type
+    if (type === 'kangaroo_detection') {
+      console.log(`[DETECTION] Kangaroos: ${kangarooCount}, Confidence: ${confidence.toFixed(2)}%, Time: ${timestamp}`);
+    } else if (type === 'average_detection_time') {
+      console.log(`[PERFORMANCE] Average Detection Time: ${detectionTime.toFixed(2)}ms, Time: ${timestamp}`);
+    }
 
-  res.status(200).json({ message: 'Logged successfully' });
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('[ERROR] Logging failed:', error);
+    res.status(500).json({ error: 'Failed to log detection' });
+  }
 }
